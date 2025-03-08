@@ -542,11 +542,11 @@ function Home() {
               {allPaths.length > 0 && (
                 <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
                   <button
-                    className="btn-danger"
+                    className="btn-primary"
                     onClick={handleRemove}
-                    disabled={selectedRemovalPaths.length === 0 || isProcessing}
+                    disabled={isProcessing}
                   >
-                    {isProcessing ? 'Processing...' : `Remove ${selectedRemovalPaths.length} Field(s)`}
+                    {isProcessing ? 'Processing...' : `View (Remove ${selectedRemovalPaths.length} Field(s))`}
                   </button>
                 </div>
               )}
