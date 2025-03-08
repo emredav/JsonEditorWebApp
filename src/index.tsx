@@ -85,13 +85,27 @@ function gatherPaths(data: any, currentPath = "", paths = new Set<string>()): Se
 function gatherCounts(value: any, currentPath = "", counts = new Map<string, number>()): Map<string, number> {
   if (Array.isArray(value)) {
     if (currentPath) {
+      // Array'in kendisini say
       counts.set(currentPath, (counts.get(currentPath) || 0) + 1);
+      
+      // Array içindeki elemanların sayısını belirle
       const arrayPath = `${currentPath}[]`;
-      counts.set(arrayPath, (counts.get(arrayPath) || 0) + value.length);
+      counts.set(arrayPath, value.length);
     }
-    value.forEach((item) => {
-      gatherCounts(item, currentPath ? `${currentPath}[]` : "[]", counts);
-    });
+    
+    // Array içindeki ilk elemanın yapısını işle ancak sayaç artırma
+    if (value.length > 0) {
+      // Bu kısmı değiştirdik - artık yeni path için sayaç artırmıyoruz
+      // sadece yapıyı incelemek için ilerliyoruz
+      const innerValue = value[0];
+      if (innerValue && typeof innerValue === "object") {
+        const newPath = currentPath ? `${currentPath}[]` : "[]";
+        for (const key in innerValue) {
+          const innerPath = `${newPath}.${key}`;
+          gatherCounts(innerValue[key], innerPath, counts);
+        }
+      }
+    }
   } else if (value !== null && typeof value === "object") {
     if (currentPath) {
       counts.set(currentPath, (counts.get(currentPath) || 0) + 1);
