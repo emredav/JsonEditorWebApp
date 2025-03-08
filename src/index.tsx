@@ -65,15 +65,21 @@ function gatherPaths(data: any, currentPath = "", paths = new Set<string>()): Se
     
     // Sadece array içindekilerle ilgili pathleri ekleyelim
     if (data.length > 0) {
-      // Array içindeki ilk elemanın yapısını temsilen gatherPaths'i çağırıyoruz
-      // Bu her array elemanının aynı yapıda olduğunu varsayar
+      // Array path'ini ekle
       const arrayPath = currentPath ? `${currentPath}[]` : "[]";
+      paths.add(arrayPath); // Array'in kendisini boşaltma seçeneği
       
       // Array'in ilk elemanı için yapı çıkarma
       if (typeof data[0] === "object" && data[0] !== null) {
         for (const key in data[0]) {
           const newPath = `${arrayPath}.${key}`;
           paths.add(newPath);
+          
+          // Eğer bu property bir array ise, onun için de [] seçeneği ekle
+          if (Array.isArray(data[0][key])) {
+            paths.add(`${newPath}[]`); // İç array'i boşaltma seçeneği
+          }
+          
           gatherPaths(data[0][key], newPath, paths);
         }
       }
@@ -85,6 +91,12 @@ function gatherPaths(data: any, currentPath = "", paths = new Set<string>()): Se
     for (const key in data) {
       const newPath = currentPath ? `${currentPath}.${key}` : key;
       paths.add(newPath);
+      
+      // Eğer bu property bir array ise, onun için de [] seçeneği ekle
+      if (Array.isArray(data[key])) {
+        paths.add(`${newPath}[]`); // İç array'i boşaltma seçeneği
+      }
+      
       gatherPaths(data[key], newPath, paths);
     }
   } else {
@@ -165,61 +177,74 @@ function removeSelectedPaths(data: any, pathsToRemove: string[]): any {
 }
 
 function removePath(data: any, path: string): any {
+  // Path'deki çift noktaları temizle
+  path = path.replace(/\.{2,}/g, '.');
+  
+  // Path'i tokenlara ayır
   const tokens = path.split(".");
+  
+  // Path'de "[]" içeren bir parça varsa özel işle
+  if (path.includes("[]")) {
+    // Örn: arkadas_listesi[].yas -> ["arkadas_listesi[]", "yas"] 
+    // şeklinde tokenlara ayrılacak
+    return removePathHelper(data, tokens);
+  }
+  
   return removePathHelper(data, tokens);
 }
 
 function removePathHelper(data: any, tokens: string[]): any {
+  // Eğer token kalmadıysa işlem yapma
   if (!tokens.length) return data;
 
   let token = tokens[0];
-  let isArrayToken = false;
+  let isArrayEmptying = false;
   
-  // Array path kontrolü
+  // "[]" ile biten token kontrolü (örn: arkadas_listesi[])
   if (token.endsWith("[]")) {
-    isArrayToken = true;
-    token = token.slice(0, -2);
+    isArrayEmptying = true;
+    token = token.slice(0, -2); // "[]" kısmını kaldır
   }
 
   if (Array.isArray(data)) {
-    // Eğer array içindeki elemanlar için yol belirteniyorsa (örn: [].isim)
-    if (tokens.length > 0 && !isArrayToken) {
-      return data.map((item) => removePathHelper(item, tokens));
-    }
-    return data;
-  } else if (data && typeof data === "object") {
-    const copy: Record<string, any> = { ...data };
+    // Eğer data bir array ise:
     
-    if (isArrayToken) {
-      // Eğer array'in içini boşaltma işlemi (örn: arkadas_listesi[])
-      if (token in copy && Array.isArray(copy[token])) {
+    // 1. "arkadas_listesi[].yas" gibi bir durumda tokens = ["yas"] kalır
+    // 2. Bu durumda array'in her elemanında bu token'ı işlemeliyiz
+    return data.map(item => removePathHelper(item, tokens));
+  } 
+  else if (data && typeof data === "object") {
+    // Data bir obje ise
+    const copy = { ...data }; // Objenin kopyasını al
+    
+    if (token in copy) {
+      // Token objede var ise
+      
+      if (isArrayEmptying && Array.isArray(copy[token])) {
+        // Eğer token bir array ve "[]" ile işaretlenmişse içeriğini boşalt
         if (tokens.length === 1) {
-          // Array içeriğini boşalt ama array'i kendisini silme
+          // Bu son token ise array'i boşalt
           copy[token] = [];
           return copy;
         } else {
-          // Array içindeki her elemana tokens.slice(1) ile işlem yap
-          const nextToken = tokens[1];
-          copy[token] = copy[token].map((el: any) => {
-            if (nextToken in el) {
-              const newEl = { ...el };
-              delete newEl[nextToken];
-              return newEl;
-            }
-            return el;
-          });
-          return copy;
+          // Örn: arkadas_listesi[].yas için buraya geliyoruz ve tokens.slice(1) = ["yas"]
+          // Her arkadaş için yas özelliğini silmemiz gerekiyor
+          if (Array.isArray(copy[token])) {
+            // Array içindeki her elemana yeni tokens'ları uygula
+            copy[token] = copy[token].map((item: any) => {
+              // Array içindeki her elemana kalan tokenleri uygula
+              return removePathHelper(item, tokens.slice(1));
+            });
+            return copy;
+          }
         }
-      }
-    } else {
-      if (tokens.length === 1) {
+      } else if (tokens.length === 1) {
+        // Son token ise ve array boşaltma değilse, özelliği sil
         delete copy[token];
         return copy;
-      } else {
-        if (token in copy) {
-          copy[token] = removePathHelper(copy[token], tokens.slice(1));
-        }
-        return copy;
+      } else if (copy[token] !== null && (typeof copy[token] === "object" || Array.isArray(copy[token]))) {
+        // Daha fazla token var ve içeri girebiliyorsak, recursive devam et
+        copy[token] = removePathHelper(copy[token], tokens.slice(1));
       }
     }
     return copy;
@@ -385,7 +410,11 @@ function Home() {
             setGeneratedSchema(schema);
       
             const pathSet = gatherPaths(data);
-            setAllPaths(Array.from(pathSet).sort());
+            // Path'leri temizle
+            const cleanedPaths = Array.from(pathSet)
+              .map(path => path.replace(/\.{2,}/g, '.')) // Çift noktaları temizle
+              .sort();
+            setAllPaths(cleanedPaths);
       
             const countsMap = gatherCounts(data);
             setItemCounts(countsMap);
