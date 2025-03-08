@@ -93,17 +93,36 @@ function gatherCounts(value: any, currentPath = "", counts = new Map<string, num
       counts.set(arrayPath, value.length);
     }
     
-    // Array içindeki ilk elemanın yapısını işle ancak sayaç artırma
-    if (value.length > 0) {
-      // Bu kısmı değiştirdik - artık yeni path için sayaç artırmıyoruz
-      // sadece yapıyı incelemek için ilerliyoruz
+    // Her bir array elemanı için işlem yap
+    for (let i = 0; i < value.length; i++) {
+      const item = value[i];
+      // İç içe array kontrol - eğer array elemanı kendisi de array ise
+      if (Array.isArray(item)) {
+        // İç array'in path'ini oluştur
+        const innerArrayPath = currentPath ? `${currentPath}[].${i}` : `[].${i}`;
+        // İç array'in kendisini say
+        counts.set(innerArrayPath, 1);
+        // İç array'in eleman sayısını belirle
+        counts.set(`${innerArrayPath}[]`, item.length);
+        
+        // İç array'in elemanlarını recursive olarak işle
+        gatherCounts(item, `${innerArrayPath}`, counts);
+      } else if (item && typeof item === "object") {
+        // Obje içeren array elemanını işle
+        const newPath = currentPath ? `${currentPath}[].${i}` : `[].${i}`;
+        counts.set(newPath, 1);
+        gatherCounts(item, newPath, counts);
+      }
+    }
+    
+    // İlk elemanın yapısını inceleme (eski kod)
+    // Artık her eleman için yukarıdaki for döngüsünde işlem yapıyoruz
+    if (value.length > 0 && typeof value[0] === "object" && !Array.isArray(value[0])) {
       const innerValue = value[0];
-      if (innerValue && typeof innerValue === "object") {
-        const newPath = currentPath ? `${currentPath}[]` : "[]";
-        for (const key in innerValue) {
-          const innerPath = `${newPath}.${key}`;
-          gatherCounts(innerValue[key], innerPath, counts);
-        }
+      const newPath = currentPath ? `${currentPath}[]` : "[]";
+      for (const key in innerValue) {
+        const innerPath = `${newPath}.${key}`;
+        gatherCounts(innerValue[key], innerPath, counts);
       }
     }
   } else if (value !== null && typeof value === "object") {
