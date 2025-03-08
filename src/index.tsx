@@ -62,8 +62,21 @@ function gatherPaths(data: any, currentPath = "", paths = new Set<string>()): Se
     if (currentPath) {
       paths.add(currentPath);
     }
+    
+    // Sadece array içindekilerle ilgili pathleri ekleyelim
     if (data.length > 0) {
-      gatherPaths(data[0], currentPath ? currentPath + "[]." : "[]", paths);
+      // Array içindeki ilk elemanın yapısını temsilen gatherPaths'i çağırıyoruz
+      // Bu her array elemanının aynı yapıda olduğunu varsayar
+      const arrayPath = currentPath ? `${currentPath}[]` : "[]";
+      
+      // Array'in ilk elemanı için yapı çıkarma
+      if (typeof data[0] === "object" && data[0] !== null) {
+        for (const key in data[0]) {
+          const newPath = `${arrayPath}.${key}`;
+          paths.add(newPath);
+          gatherPaths(data[0][key], newPath, paths);
+        }
+      }
     }
   } else if (data !== null && typeof data === "object") {
     if (currentPath) {
@@ -71,6 +84,7 @@ function gatherPaths(data: any, currentPath = "", paths = new Set<string>()): Se
     }
     for (const key in data) {
       const newPath = currentPath ? `${currentPath}.${key}` : key;
+      paths.add(newPath);
       gatherPaths(data[key], newPath, paths);
     }
   } else {
@@ -160,28 +174,43 @@ function removePathHelper(data: any, tokens: string[]): any {
 
   let token = tokens[0];
   let isArrayToken = false;
+  
+  // Array path kontrolü
   if (token.endsWith("[]")) {
     isArrayToken = true;
     token = token.slice(0, -2);
   }
 
   if (Array.isArray(data)) {
-    return data.map((item) => removePathHelper(item, tokens));
+    // Eğer array içindeki elemanlar için yol belirteniyorsa (örn: [].isim)
+    if (tokens.length > 0 && !isArrayToken) {
+      return data.map((item) => removePathHelper(item, tokens));
+    }
+    return data;
   } else if (data && typeof data === "object") {
     const copy: Record<string, any> = { ...data };
+    
     if (isArrayToken) {
+      // Eğer array'in içini boşaltma işlemi (örn: arkadas_listesi[])
       if (token in copy && Array.isArray(copy[token])) {
         if (tokens.length === 1) {
-          delete copy[token];
+          // Array içeriğini boşalt ama array'i kendisini silme
+          copy[token] = [];
           return copy;
         } else {
-          copy[token] = copy[token].map((el: any) =>
-            removePathHelper(el, tokens.slice(1))
-          );
+          // Array içindeki her elemana tokens.slice(1) ile işlem yap
+          const nextToken = tokens[1];
+          copy[token] = copy[token].map((el: any) => {
+            if (nextToken in el) {
+              const newEl = { ...el };
+              delete newEl[nextToken];
+              return newEl;
+            }
+            return el;
+          });
           return copy;
         }
       }
-      return copy;
     } else {
       if (tokens.length === 1) {
         delete copy[token];
@@ -193,6 +222,7 @@ function removePathHelper(data: any, tokens: string[]): any {
         return copy;
       }
     }
+    return copy;
   }
   return data;
 }
@@ -262,7 +292,11 @@ function Home() {
         setGeneratedSchema(schema);
   
         const pathSet = gatherPaths(data);
-        setAllPaths(Array.from(pathSet).sort());
+        // Path'leri temizle - çift nokta içerenleri düzelt
+        const cleanedPaths = Array.from(pathSet)
+          .map(path => path.replace(/\.{2,}/g, '.')) // Çift noktaları tek noktaya çevir
+          .sort();
+        setAllPaths(cleanedPaths);
   
         const countsMap = gatherCounts(data);
         setItemCounts(countsMap);
@@ -526,17 +560,19 @@ function Home() {
             </div>
             <div className="section-content">
               <div className="checkbox-container">
-                {allPaths.map((path) => (
-                  <div key={path} className="custom-checkbox">
-                    <input
-                      type="checkbox"
-                      id={`path-${path}`}
-                      checked={selectedRemovalPaths.includes(path)}
-                      onChange={() => togglePath(path)}
-                    />
-                    <label htmlFor={`path-${path}`}>{path}</label>
-                  </div>
-                ))}
+                {allPaths
+                  .filter(path => !path.includes("[]..")) // Çift noktalar içeren path'leri filtrele
+                  .map((path) => (
+                    <div key={path} className="custom-checkbox">
+                      <input
+                        type="checkbox"
+                        id={`path-${path}`}
+                        checked={selectedRemovalPaths.includes(path)}
+                        onChange={() => togglePath(path)}
+                      />
+                      <label htmlFor={`path-${path}`}>{path}</label>
+                    </div>
+                  ))}
               </div>
               
               {allPaths.length > 0 && (
