@@ -112,7 +112,7 @@ function gatherCounts(value: any, currentPath = "", counts = new Map<string, num
   if (Array.isArray(value)) {
     if (currentPath) {
       // Array'in kendisini say
-      counts.set(currentPath, (counts.get(currentPath) || 0) + 1);
+      counts.set(currentPath, 1); // Her array 1 kez sayılır
       
       // Array içindeki elemanların sayısını belirle
       const arrayPath = `${currentPath}[]`;
@@ -122,46 +122,64 @@ function gatherCounts(value: any, currentPath = "", counts = new Map<string, num
     // Her bir array elemanı için işlem yap
     for (let i = 0; i < value.length; i++) {
       const item = value[i];
-      // İç içe array kontrol - eğer array elemanı kendisi de array ise
-      if (Array.isArray(item)) {
-        // İç array'in path'ini oluştur
-        const innerArrayPath = currentPath ? `${currentPath}[].${i}` : `[].${i}`;
-        // İç array'in kendisini say
-        counts.set(innerArrayPath, 1);
-        // İç array'in eleman sayısını belirle
-        counts.set(`${innerArrayPath}[]`, item.length);
-        
-        // İç array'in elemanlarını recursive olarak işle
-        gatherCounts(item, `${innerArrayPath}`, counts);
-      } else if (item && typeof item === "object") {
-        // Obje içeren array elemanını işle
-        const newPath = currentPath ? `${currentPath}[].${i}` : `[].${i}`;
-        counts.set(newPath, 1);
-        gatherCounts(item, newPath, counts);
+      const indexPath = currentPath ? `${currentPath}[].${i}` : `[].${i}`;
+      
+      // Her bir indeks için sadece bir kez sayaç ekle
+      // BUG FIX: Burada önceki değeri kontrol ediyoruz, çift sayımları önlemek için
+      if (!counts.has(indexPath)) {
+        counts.set(indexPath, 1);
+      }
+      
+      // İç içe array veya obje ise, içeriğini de analiz et
+      if (item !== null && typeof item === "object") {
+        gatherCounts(item, indexPath, counts);
       }
     }
     
-    // İlk elemanın yapısını inceleme (eski kod)
-    // Artık her eleman için yukarıdaki for döngüsünde işlem yapıyoruz
-    if (value.length > 0 && typeof value[0] === "object" && !Array.isArray(value[0])) {
-      const innerValue = value[0];
-      const newPath = currentPath ? `${currentPath}[]` : "[]";
-      for (const key in innerValue) {
-        const innerPath = `${newPath}.${key}`;
-        gatherCounts(innerValue[key], innerPath, counts);
-      }
-    }
-  } else if (value !== null && typeof value === "object") {
+    // BUG FIX: Eski kod tamamen kaldırıldı
+    // Önceki versiyonda burada ilk eleman için tekrar işlem yapıyorduk
+    // Bu da çift sayıma neden oluyordu (özellikle nested arraylerde)
+  } 
+  else if (value !== null && typeof value === "object") {
     if (currentPath) {
-      counts.set(currentPath, (counts.get(currentPath) || 0) + 1);
+      counts.set(currentPath, 1); // Her obje 1 kez sayılır
     }
     for (const key in value) {
       const newPath = currentPath ? `${currentPath}.${key}` : key;
-      gatherCounts(value[key], newPath, counts);
+      
+      // Alt öğe bir array mi diye kontrol et
+      if (Array.isArray(value[key])) {
+        if (!counts.has(newPath)) {
+          counts.set(newPath, 1);
+        }
+        
+        // Array elemanlarının sayısını ekle
+        const arrayPath = `${newPath}[]`;
+        counts.set(arrayPath, value[key].length);
+      } 
+      // Alt öğe başka bir obje mi?
+      else if (value[key] !== null && typeof value[key] === "object") {
+        if (!counts.has(newPath)) {
+          counts.set(newPath, 1);
+        }
+      }
+      // Basit değer mi?
+      else {
+        if (!counts.has(newPath)) {
+          counts.set(newPath, 1);
+        }
+      }
+      
+      // Alt öğenin içeriğini analiz et (recursive)
+      if (value[key] !== null && typeof value[key] === "object") {
+        gatherCounts(value[key], newPath, counts);
+      }
     }
-  } else {
-    if (currentPath) {
-      counts.set(currentPath, (counts.get(currentPath) || 0) + 1);
+  } 
+  else {
+    // Primitive değerler için (string, number, boolean, null)
+    if (currentPath && !counts.has(currentPath)) {
+      counts.set(currentPath, 1);
     }
   }
   return counts;
