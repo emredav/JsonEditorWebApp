@@ -6,8 +6,6 @@ import JsonTree from "./components/JsonTree";
 import SimpleJsonEditor from "./components/SimpleJsonEditor";
 import { useState, useRef } from "react";
 
-//COPY HATASI DÜZELT COPY butonuna basınca uygulama kitleniyor!!!!
-
 // Dosyayı JSON olarak indirme fonksiyonu
 function downloadJson(data: any, filename: string) {
   const json = JSON.stringify(data, null, 2);
@@ -520,27 +518,20 @@ function Home() {
       <div className="section">
         <div className="section-header">
           <h2 className="text-xl font-semibold">Input JSON</h2>
-          <div className="button-group">
+          <div className="button-group responsive-button-group">
             <button 
               className="btn-secondary"
               onClick={() => fileInputRef.current?.click()}
             >
               <i className="icon-upload"></i>
-              Upload JSON
+              <span className="button-text">Upload</span>
             </button>
             <button 
               className="btn-secondary"
               onClick={loadSampleJson}
             >
               <i className="icon-sample"></i>
-              Load Sample
-            </button>
-            <button 
-              className="btn-secondary"
-              onClick={clearJsonInput}
-            >
-              <i className="icon-clear"></i>
-              Clear
+              <span className="button-text">Sample</span>
             </button>
           </div>
         </div>
@@ -559,11 +550,19 @@ function Home() {
             accept=".json" 
             style={{ display: 'none' }} 
           />
-          <div className="flex" style={{ marginTop: '1rem', justifyContent: 'flex-end', gap: '0.5rem' }}>
+          <div className="editor-actions">
+            <button
+              className="btn-danger"
+              onClick={clearJsonInput}
+              disabled={!jsonInput.trim()}
+            >
+              <i className="icon-clear"></i>
+              Clear
+            </button>
             <button
               className="btn-primary"
               onClick={handleContinue}
-              disabled={isProcessing}
+              disabled={isProcessing || !jsonInput.trim()}
             >
               {isProcessing ? 'Processing...' : 'Parse JSON'}
             </button>

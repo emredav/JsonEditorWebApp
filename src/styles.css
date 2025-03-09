@@ -745,6 +745,44 @@ code {
     width: 100%;
     margin-bottom: 0.5rem;
   }
+  
+  .responsive-button-group {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .responsive-button-group button {
+    padding: 0.6rem 0.8rem;
+    flex: 1;
+  }
+  
+  .responsive-button-group .button-text {
+    display: none;
+  }
+  
+  .responsive-button-group i {
+    margin-right: 0;
+  }
+  
+  .editor-actions {
+    flex-direction: column;
+  }
+  
+  .editor-actions button {
+    width: 100%;
+  }
+}
+
+/* Smaller tablets and larger phones */
+@media (min-width: 641px) and (max-width: 768px) {
+  .editor-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .editor-actions button:first-child {
+    margin-right: auto;
+  }
 }
 
 /* Animations */
@@ -759,4 +797,17 @@ code {
 
 .hidden {
   display: none;
+}
+
+/* Editor actions container for the parse and clear buttons */
+.editor-actions {
+  display: flex;
+  margin-top: 1rem;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+/* Make the button texts more responsive */
+.responsive-button-group .button-text {
+  display: inline;
 }
