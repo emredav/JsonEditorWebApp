@@ -6,6 +6,8 @@ import JsonTree from "./components/JsonTree";
 import SimpleJsonEditor from "./components/SimpleJsonEditor";
 import { useState, useRef } from "react";
 
+//COPY HATASI DÜZELT COPY butonuna basınca uygulama kitleniyor!!!!
+
 // Dosyayı JSON olarak indirme fonksiyonu
 function downloadJson(data: any, filename: string) {
   const json = JSON.stringify(data, null, 2);
@@ -317,6 +319,20 @@ function Home() {
   // Dosya yükleme için ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Input temizleme fonksiyonu
+  const clearJsonInput = () => {
+    // Onay popup'ı göster
+    if (window.confirm("Are you sure you want to clear the JSON input? This action cannot be undone.")) {
+      setJsonInput("");
+      setParsedJson(null);
+      setGeneratedSchema(null);
+      setAllPaths([]);
+      setSelectedRemovalPaths([]);
+      setItemCounts(new Map());
+      setModifiedJson(null);
+    }
+  };
+
   const handleContinue = () => {
     if (!jsonInput.trim()) {
       alert("Please enter JSON data first");
@@ -518,6 +534,13 @@ function Home() {
             >
               <i className="icon-sample"></i>
               Load Sample
+            </button>
+            <button 
+              className="btn-secondary"
+              onClick={clearJsonInput}
+            >
+              <i className="icon-clear"></i>
+              Clear
             </button>
           </div>
         </div>
