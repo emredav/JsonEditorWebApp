@@ -270,34 +270,86 @@ function removePathHelper(data: any, tokens: string[]): any {
   return data;
 }
 
-// Copy utility
+// Kopyalama işlemi için geliştirilmiş mobil uyumlu fonksiyon
 function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text)
-    .then(() => {
-      // Show success notification
-      const notification = document.createElement('div');
-      notification.textContent = '✓ Copied to clipboard';
-      notification.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #10b981;
-        color: white;
-        padding: 10px 16px;
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        z-index: 1000;
-        animation: fadeIn 0.3s, fadeOut 0.5s 1.5s forwards;
-      `;
-      document.body.appendChild(notification);
-      
+  // Bildirim gösterme fonksiyonu - kopyalama sonrası kullanıcıya bilgi verir
+  const showNotification = (success: boolean) => {
+    const notification = document.createElement('div');
+    notification.textContent = success ? '✓ Copied' : '✗ Copy failed';
+    notification.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: ${success ? '#10b981' : '#ef4444'};
+      color: white;
+      padding: 10px 16px;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1000;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    `;
+    document.body.appendChild(notification);
+    
+    // Notification'ı temiz şekilde kaldır (animasyon sorunu düzeltildi)
+    setTimeout(() => {
+      notification.style.opacity = '0';
       setTimeout(() => {
-        notification.remove();
-      }, 2000);
-    })
-    .catch(() => {
-      alert("Failed to copy to clipboard.");
-    });
+        document.body.removeChild(notification);
+      }, 300);
+    }, 1700);
+  };
+
+  // Modern Clipboard API ile deneme
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        showNotification(true);
+      })
+      .catch((err) => {
+        console.error("Clipboard API error:", err);
+        // Modern API başarısız olursa yedek yöntemi dene
+        fallbackCopyToClipboard(text, showNotification);
+      });
+  } else {
+    // Clipboard API desteklenmiyorsa yedek yöntemi kullan
+    fallbackCopyToClipboard(text, showNotification);
+  }
+}
+
+// Eski tarayıcılar ve mobil için yedek kopyalama metodu
+function fallbackCopyToClipboard(text: string, callback: (success: boolean) => void) {
+  try {
+    // Geçici textarea elementi oluştur
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    
+    // Mobil ve masaüstünde çalışması için stil ayarları
+    textArea.style.position = 'fixed';
+    textArea.style.left = '0';
+    textArea.style.top = '0';
+    textArea.style.opacity = '0';
+    textArea.style.pointerEvents = 'none';
+    textArea.style.zIndex = '-1';
+    
+    document.body.appendChild(textArea);
+    
+    // Metin alanını seç ve kopyala
+    textArea.focus();
+    textArea.select();
+    
+    // Kopyalama komutu çalıştır
+    const successful = document.execCommand('copy');
+    
+    // Geçici elementi temizle
+    document.body.removeChild(textArea);
+    
+    // Sonucu bildir
+    callback(successful);
+  } catch (err) {
+    console.error("Copying text failed:", err);
+    callback(false);
+  }
 }
 
 function Home() {
@@ -470,8 +522,13 @@ function Home() {
     downloadJson(modifiedJson, 'modified.json');
   };
   
-  // Satır sayılarını yaratmak için - Artık kullanılmıyor, Monaco bu işi yapacak
-  // const lineNumbers = jsonInput.split('\n').map((_, i) => i + 1).join('\n');
+  // Geliştirilmiş kopyalama fonksiyonu - kolay çağrı için
+  const handleCopyToClipboard = (text: string) => {
+    // Mobil cihazlarda gereksiz işlemler yapmayalım
+    // JSON içeriği büyükse, bunu stringe çevirmek gecikmeye neden olur
+    // Bu işlemi önceden yapıp saklayarak performansı artırabiliriz
+    copyToClipboard(text);
+  };
 
   return (
     <div className="container min-h-screen">
@@ -582,7 +639,7 @@ function Home() {
                   <pre>{JSON.stringify(generatedSchema, null, 2)}</pre>
                   <button
                     className="btn-copy"
-                    onClick={() => copyToClipboard(JSON.stringify(generatedSchema, null, 2))}
+                    onClick={() => handleCopyToClipboard(JSON.stringify(generatedSchema, null, 2))}
                   >
                     Copy
                   </button>
@@ -675,7 +732,7 @@ function Home() {
                   <pre>{JSON.stringify(modifiedJson, null, 2)}</pre>
                   <button
                     className="btn-copy"
-                    onClick={() => copyToClipboard(JSON.stringify(modifiedJson, null, 2))}
+                    onClick={() => handleCopyToClipboard(JSON.stringify(modifiedJson, null, 2))}
                   >
                     Copy
                   </button>
