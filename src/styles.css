@@ -143,6 +143,7 @@ body {
 
 .relative {
   position: relative;
+  overflow: visible; /* İçerik taşması durumunda butonun görünür kalması için */
 }
 
 .bg-white {
@@ -506,7 +507,7 @@ button {
 .btn-copy {
   position: absolute;
   top: 0.5rem;
-  right: 0.5rem;
+  right: 0.5rem; /* Butonu sağda konumlandır */
   background-color: rgba(241, 245, 249, 0.9);
   padding: 0.35rem 0.75rem;
   border-radius: 4px;
@@ -517,6 +518,10 @@ button {
   /* Mobil dokunmatik gecikmesini azaltmak için */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  z-index: 5; /* Butonun her zaman üstte kalmasını sağla */
+  overflow: hidden; /* Taşan metni gizle */
+  text-overflow: ellipsis; /* Taşan metin yerine ... göster */
+  white-space: nowrap; /* Butondaki metni tek satırda tut */
 }
 
 .btn-copy:hover {
@@ -725,6 +730,8 @@ pre {
   background-color: #f8fafc;
   border-radius: 6px;
   padding: 1rem;
+  padding-top: 2.5rem; /* Üstte buton için yeterli alan bırak */
+  padding-right: 3.5rem; /* Sağda buton için daha fazla alan bırak */
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: 'Consolas', 'Monaco', monospace;
@@ -777,6 +784,28 @@ code {
   .editor-actions button {
     width: 100%;
   }
+
+  pre {
+    padding-top: 3rem; /* Mobilde buton için daha fazla alan */
+    padding-right: 3.5rem; /* Mobilde sağ tarafta daha fazla alan */
+    font-size: 0.85rem; /* Mobilde daha küçük yazı tipi */
+  }
+  
+  /* Mobilde butonun daha belirgin olması için */
+  .btn-copy {
+    top: 0.3rem;
+    right: 0.5rem; /* Mobilde butonu sağa konumlandır */
+    background-color: rgba(241, 245, 249, 0.95);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 0.35rem 0.5rem; /* Mobilde padding'i azalt */
+    font-size: 0.75rem; /* Mobilde font boyutunu azalt */
+    max-width: 35%; /* Mobilde maksimum genişliği biraz artır */
+  }
+  
+  /* Relative konteyneri için gereksiz ek mobil ayarları kaldır */
+  .relative {
+    padding: 0; /* Tüm padding'leri kaldır */
+  }
 }
 
 /* Smaller tablets and larger phones */
@@ -810,28 +839,6 @@ code {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-/* Mobil dostu buton stilleri */
-.btn-copy {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background-color: rgba(241, 245, 249, 0.9);
-  padding: 0.35rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  backdrop-filter: blur(2px);
-  border: 1px solid #e5e7eb;
-  transition: all 0.2s;
-  /* Mobil dokunmatik gecikmesini azaltmak için */
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-.btn-copy:hover {
-  background-color: rgba(226, 232, 240, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Mobil dokunmatik cihazlar için genel iyileştirmeler */
