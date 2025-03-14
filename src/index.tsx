@@ -198,16 +198,73 @@ function removePath(data: any, path: string): any {
   // Path'deki çift noktaları temizle
   path = path.replace(/\.{2,}/g, '.');
   
+  // Dizi elemanı özel durumunu kontrol et (örn: matris[].0)
+  //"matris": [
+  //  [1, 2, 3],
+  //  [4, 5, 6],
+  //  [7, 8, 9]
+  // ]
+  // Bu, matris dizisinin 0. elemanını silme işlemi için gerekli
+  const arrayElementMatch = path.match(/^(.+)\[\]\.(\d+)$/);
+  if (arrayElementMatch) {
+    const arrayPath = arrayElementMatch[1]; // "matris"
+    const index = parseInt(arrayElementMatch[2]); // 0
+    
+    // Önce array'i bul
+    let parentObj = data;
+    const parentPath = arrayPath.split('.');
+    
+    // Eğer '.' içeriyorsa önceki objeleri bulmak için path'i takip et
+    if (parentPath.length > 1) {
+      for (let i = 0; i < parentPath.length - 1; i++) {
+        if (parentObj[parentPath[i]] === undefined) return data;
+        parentObj = parentObj[parentPath[i]];
+      }
+    }
+    
+    const lastKey = parentPath[parentPath.length - 1];
+    
+    // Array'in kendisi var mı ve gerçekten bir array mi?
+    if (parentObj[lastKey] && Array.isArray(parentObj[lastKey])) {
+      // İndeks geçerli mi kontrol et
+      if (index >= 0 && index < parentObj[lastKey].length) {
+        // Dizi kopyası oluştur ve belirli indeksi kaldır
+        const arrayClone = [...parentObj[lastKey]];
+        arrayClone.splice(index, 1);
+        
+        // Eğer ana obje aynıysa (data doğrudan array'se)
+        if (parentObj === data && parentPath.length === 1 && lastKey === "0") {
+          return arrayClone;
+        }
+        
+        // Ana objenin kopyasını oluştur
+        const parentObjClone = Array.isArray(parentObj) ? [...parentObj] : {...parentObj};
+        parentObjClone[lastKey] = arrayClone;
+        
+        // En dıştaki objeyi oluştur
+        if (parentObj === data) {
+          return parentObjClone;
+        }
+        
+        // Üst obje path'i ile tekrar çağır
+        let result = {...data};
+        let current = result;
+        for (let i = 0; i < parentPath.length - 1; i++) {
+          const key = parentPath[i];
+          current[key] = i === parentPath.length - 2 ? parentObjClone : {...current[key]};
+          current = current[key];
+        }
+        
+        return result;
+      }
+    }
+    return data; // Eğer array yoksa veya indeks geçersizse değişiklik yapma
+  }
+  
   // Path'i tokenlara ayır
   const tokens = path.split(".");
   
-  // Path'de "[]" içeren bir parça varsa özel işle
-  if (path.includes("[]")) {
-    // Örn: arkadas_listesi[].yas -> ["arkadas_listesi[]", "yas"] 
-    // şeklinde tokenlara ayrılacak
-    return removePathHelper(data, tokens);
-  }
-  
+  // Normal path işleme - diğer durumlar için
   return removePathHelper(data, tokens);
 }
 
@@ -224,11 +281,35 @@ function removePathHelper(data: any, tokens: string[]): any {
     token = token.slice(0, -2); // "[]" kısmını kaldır
   }
 
+  // İç içe dizi yapısı için özel durum kontrolü (örn: matris[].0)
+  // Bu token sayısal bir indeks mi kontrol et
+  const isNumericIndex = !isNaN(parseInt(token)) && String(parseInt(token)) === token;
+
   if (Array.isArray(data)) {
-    // Eğer data bir array ise:
+    // Eğer data bir array ve önceki token []'li bir token idi ise
+    // ve şu anki token bir sayı ise (örn: matris[].0)
+    if (isNumericIndex) {
+      // Bu durumda, token'ın belirttiği indeksteki elemanı kaldırmalıyız
+      const index = parseInt(token);
+      
+      // İndeks, array sınırları içinde mi kontrol et
+      if (index >= 0 && index < data.length) {
+        // Eğer bu son token ise, array'den bu elemanı çıkar
+        if (tokens.length === 1) {
+          // Belirtilen indeksteki elemanı kaldır
+          return data.filter((_, i) => i !== index);
+        } else {
+          // Eğer başka tokenlar da varsa, bu elemanın içine devam et
+          const result = [...data];
+          result[index] = removePathHelper(result[index], tokens.slice(1));
+          return result;
+        }
+      }
+      return data; // Geçersiz indeks ise data'yı değiştirmeden döndür
+    }
     
-    // 1. "arkadas_listesi[].yas" gibi bir durumda tokens = ["yas"] kalır
-    // 2. Bu durumda array'in her elemanında bu token'ı işlemeliyiz
+    // Diğer durumlarda, array içindeki her elemana token'ları uygula
+    // Bu, "arkadas_listesi[].yas" gibi durumlarda çalışır
     return data.map(item => removePathHelper(item, tokens));
   } 
   else if (data && typeof data === "object") {
@@ -245,15 +326,32 @@ function removePathHelper(data: any, tokens: string[]): any {
           copy[token] = [];
           return copy;
         } else {
-          // Örn: arkadas_listesi[].yas için buraya geliyoruz ve tokens.slice(1) = ["yas"]
-          // Her arkadaş için yas özelliğini silmemiz gerekiyor
-          if (Array.isArray(copy[token])) {
-            // Array içindeki her elemana yeni tokens'ları uygula
-            copy[token] = copy[token].map((item: any) => {
-              // Array içindeki her elemana kalan tokenleri uygula
-              return removePathHelper(item, tokens.slice(1));
+          // Özel durum: sonraki token sayısal indeks ise (örn: matris[].0)
+          const nextToken = tokens[1];
+          const isNextNumeric = !isNaN(parseInt(nextToken)) && String(parseInt(nextToken)) === nextToken;
+          
+          if (isNextNumeric && Array.isArray(copy[token])) {
+            // Bu durumda her bir iç diziden belirli bir indeksteki elemanı kaldırmalıyız
+            const index = parseInt(nextToken);
+            // Her bir iç dizi için indeksteki elemanı kaldır
+            copy[token] = copy[token].map((innerArray: any) => {
+              if (Array.isArray(innerArray) && index >= 0 && index < innerArray.length) {
+                // İndeksteki elemanı kaldır
+                return innerArray.filter((_, i) => i !== index);
+              }
+              return innerArray; // Diziyse ve indeks geçerliyse değişiklik yap, değilse aynen döndür
             });
-            return copy;
+            
+            // İşlem yapıldığı için bir sonraki token olan indeksi atla
+            return removePathHelper(copy, tokens.slice(2));
+          } else {
+            // Normal durum: array içindeki her elemana tokens'ları uygula
+            if (Array.isArray(copy[token])) {
+              copy[token] = copy[token].map((item: any) => {
+                return removePathHelper(item, tokens.slice(1));
+              });
+              return copy;
+            }
           }
         }
       } else if (tokens.length === 1) {
