@@ -10,6 +10,35 @@ This project is a JSON Tools built with React and TypeScript. It allows users to
 - Count the occurrences of items in the JSON structure.
 - Remove selected fields from the JSON data.
 
+## Project Structure
+
+```
+JsonEditorApp/JsonEditor/
+├── public/               # Public assets
+│   └── index.html        # Main HTML file
+├── src/                  # Source code
+│   ├── components/       # React components
+│   │   ├── editors/      # Input editor components
+│   │   ├── json-visualization/ # JSON tree visualization
+│   │   └── ui/           # UI components like buttons, selectors
+│   ├── hooks/            # Custom React hooks
+│   │   └── useJsonOperations.ts # JSON processing hook
+│   ├── styles/           # CSS styles
+│   │   ├── base.css      # Base styles
+│   │   ├── buttons.css   # Button styles
+│   │   ├── components.css # Component-specific styles
+│   │   ├── responsive.css # Responsive design rules
+│   │   └── utilities.css # Utility classes
+│   ├── utils/            # Utility functions
+│   │   ├── fileUtils.ts  # File handling utilities
+│   │   └── jsonUtils.ts  # JSON processing utilities
+│   ├── App.tsx           # Main App component
+│   ├── index.tsx         # Application entry point
+│   └── react-app-env.d.ts # TypeScript declarations
+├── package.json          # Dependencies and scripts
+└── tsconfig.json         # TypeScript configuration
+```
+
 ## Getting Started
 
 ### Prerequisites
