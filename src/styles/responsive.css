@@ -1,0 +1,58 @@
+/* Responsive design rules */
+@media (max-width: 640px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .header-container {
+    margin-bottom: 1rem;
+  }
+  
+  .editor-title {
+    font-size: 1.75rem;
+  }
+  
+  .editor-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .checkbox-container {
+    grid-template-columns: 1fr;
+  }
+  
+  button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .editor-actions {
+    flex-direction: column;
+  }
+  
+  .editor-actions button {
+    width: 100%;
+  }
+
+  pre {
+    padding-top: 3rem;
+    padding-right: 3.5rem;
+    font-size: 0.85rem;
+  }
+  
+  .relative {
+    padding: 0;
+  }
+}
+
+/* Smaller tablets and larger phones */
+@media (min-width: 641px) and (max-width: 768px) {
+  .editor-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .editor-actions button:first-child {
+    margin-right: auto;
+  }
+}
