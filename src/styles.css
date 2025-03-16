@@ -404,29 +404,6 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-/* Monaco Editor Styles */
-.monaco-editor-wrapper {
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  overflow: hidden;
-  height: 300px;
-}
-
-.monaco-editor-container {
-  height: 100%;
-  width: 100%;
-}
-
-/* Removing unused code editor with line numbers styles */
-.code-editor {
-  display: none; /* Hide the old editor */
-}
-
-/* Monaco Editor Styles - hidden for now */
-.monaco-editor-wrapper {
-  display: none;
-}
-
 /* Custom Simple JSON Editor Styles */
 .editor-wrapper {
   border: 1px solid #d1d5db;
