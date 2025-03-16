@@ -1,6 +1,6 @@
 # JSON Editor
 
-This project is a Universal JSON Editor built with React and TypeScript. It allows users to input JSON data, view its structure, generate a schema, and modify the JSON by removing selected fields.
+This project is a JSON Tools built with React and TypeScript. It allows users to input JSON data, view its structure, generate a schema, and modify the JSON by removing selected fields.
 
 ## Features
 
