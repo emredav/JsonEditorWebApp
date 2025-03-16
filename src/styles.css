@@ -317,6 +317,15 @@ h1 {
   margin-bottom: 1.5rem !important;
 }
 
+/* Header container for title, subtitle and GitHub link */
+.header-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin-bottom: 2rem;
+}
+
 /* Başlık ortalamalı olsun */
 .editor-title {
   background: linear-gradient(90deg, #2563eb, #3b82f6);
@@ -324,10 +333,50 @@ h1 {
   -webkit-background-clip: text;
   color: transparent;
   font-size: 2rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.editor-subtitle {
+  color: #4b5563;
+  font-size: 1.25rem;
+  font-weight: 500;
   margin-bottom: 1.5rem;
   text-align: center;
+}
+
+.github-link {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: #4b5563;
+  transition: color 0.2s ease;
+}
+
+.github-link:hover {
+  color: #2563eb;
+}
+
+.github-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+@media (max-width: 640px) {
+  .header-container {
+    margin-bottom: 1rem;
+  }
+  
+  .editor-title {
+    font-size: 1.75rem;
+  }
+  
+  .editor-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
 }
 
 h2 {

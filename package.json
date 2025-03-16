@@ -1,7 +1,7 @@
 {
-  "name": "json-editor",
+  "name": "json-tools",
   "version": "1.0.0",
-  "description": "A universal JSON editor that allows users to parse, modify, and visualize JSON data.",
+  "description": "A JSON Path Analyzer & Remover that allows users to parse, modify, and visualize JSON data.",
   "main": "src/index.tsx",
   "scripts": {
     "start": "SET NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
