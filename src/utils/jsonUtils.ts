@@ -279,3 +279,147 @@ function removePathHelper(data: any, tokens: string[]): any {
   }
   return data;
 }
+
+// Validate JSON against a JSON schema
+export function validateJsonAgainstSchema(json: any, schema: any): any {
+  // Define a validation error type
+  type ValidationError = {
+    path: string;
+    message: string;
+  };
+  
+  // Define the validation result type
+  type ValidationResult = {
+    valid: boolean;
+    errors: ValidationError[];
+  };
+  
+  // Simple schema validation implementation
+  const result: ValidationResult = {
+    valid: true,
+    errors: []
+  };
+
+  try {
+    // Type validation
+    validateType(json, schema, "", result);
+    
+    // Required properties validation
+    if (schema.type === "object" && schema.required && Array.isArray(schema.required)) {
+      for (const requiredProp of schema.required) {
+        if (json[requiredProp] === undefined) {
+          result.valid = false;
+          result.errors.push({
+            path: requiredProp,
+            message: `Required property '${requiredProp}' is missing`
+          });
+        }
+      }
+    }
+    
+    // Properties validation for objects
+    if (schema.type === "object" && schema.properties && typeof schema.properties === "object") {
+      for (const prop in json) {
+        if (schema.properties[prop]) {
+          validateType(json[prop], schema.properties[prop], prop, result);
+        } else if (schema.additionalProperties === false) {
+          result.valid = false;
+          result.errors.push({
+            path: prop,
+            message: `Additional property '${prop}' is not allowed`
+          });
+        }
+      }
+    }
+    
+    // Items validation for arrays
+    if (schema.type === "array" && schema.items && Array.isArray(json)) {
+      for (let i = 0; i < json.length; i++) {
+        validateType(json[i], schema.items, `[${i}]`, result);
+      }
+    }
+    
+    // Enum validation
+    if (schema.enum && Array.isArray(schema.enum)) {
+      if (!schema.enum.includes(json)) {
+        result.valid = false;
+        result.errors.push({
+          path: "",
+          message: `Value must be one of: ${schema.enum.join(', ')}`
+        });
+      }
+    }
+    
+  } catch (error) {
+    result.valid = false;
+    result.errors.push({
+      path: "",
+      message: String(error)
+    });
+  }
+
+  return result;
+}
+
+function validateType(value: any, schema: any, path: string, result: any) {
+  const type = schema.type;
+  
+  if (!type) return;
+  
+  let actualType: string = typeof value;
+  if (Array.isArray(value)) actualType = "array";
+  if (value === null) actualType = "null";
+  
+  // Handle multiple types (type can be an array in JSON Schema)
+  const types = Array.isArray(type) ? type : [type];
+  
+  // Type mapping between JS and JSON Schema
+  const typeMapping: Record<string, string[]> = {
+    "string": ["string"],
+    "number": ["number"],
+    "integer": ["number"],
+    "boolean": ["boolean"],
+    "object": ["object"],
+    "array": ["array"],
+    "null": ["null"]
+  };
+  
+  let isValidType = false;
+  for (const schemaType of types) {
+    const validJsTypes = typeMapping[schemaType];
+    if (validJsTypes && validJsTypes.includes(actualType)) {
+      isValidType = true;
+      break;
+    }
+    // Special case for integers
+    if (schemaType === "integer" && actualType === "number" && Number.isInteger(value)) {
+      isValidType = true;
+      break;
+    }
+  }
+  
+  if (!isValidType) {
+    result.valid = false;
+    result.errors.push({
+      path: path,
+      message: `Type mismatch: expected ${types.join(" or ")}, got ${actualType}`
+    });
+  }
+  
+  // Recursive validation for objects and arrays
+  if (actualType === "object" && schema.properties) {
+    for (const prop in schema.properties) {
+      if (value[prop] !== undefined) {
+        const propPath = path ? `${path}.${prop}` : prop;
+        validateType(value[prop], schema.properties[prop], propPath, result);
+      }
+    }
+  }
+  
+  if (actualType === "array" && schema.items && Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      const itemPath = path ? `${path}[${i}]` : `[${i}]`;
+      validateType(value[i], schema.items, itemPath, result);
+    }
+  }
+}
