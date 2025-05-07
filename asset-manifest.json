@@ -1,20 +1,20 @@
 {
   "files": {
-    "main.css": "/JsonEditorWebApp/static/css/main.f9d8452d.chunk.css",
-    "main.js": "/JsonEditorWebApp/static/js/main.27755365.chunk.js",
-    "main.js.map": "/JsonEditorWebApp/static/js/main.27755365.chunk.js.map",
+    "main.css": "/JsonEditorWebApp/static/css/main.9a57a90c.chunk.css",
+    "main.js": "/JsonEditorWebApp/static/js/main.53233b3c.chunk.js",
+    "main.js.map": "/JsonEditorWebApp/static/js/main.53233b3c.chunk.js.map",
     "runtime-main.js": "/JsonEditorWebApp/static/js/runtime-main.d4b64201.js",
     "runtime-main.js.map": "/JsonEditorWebApp/static/js/runtime-main.d4b64201.js.map",
-    "static/js/2.849bd6d9.chunk.js": "/JsonEditorWebApp/static/js/2.849bd6d9.chunk.js",
-    "static/js/2.849bd6d9.chunk.js.map": "/JsonEditorWebApp/static/js/2.849bd6d9.chunk.js.map",
+    "static/js/2.6d0bf6a0.chunk.js": "/JsonEditorWebApp/static/js/2.6d0bf6a0.chunk.js",
+    "static/js/2.6d0bf6a0.chunk.js.map": "/JsonEditorWebApp/static/js/2.6d0bf6a0.chunk.js.map",
     "index.html": "/JsonEditorWebApp/index.html",
-    "static/css/main.f9d8452d.chunk.css.map": "/JsonEditorWebApp/static/css/main.f9d8452d.chunk.css.map",
-    "static/js/2.849bd6d9.chunk.js.LICENSE.txt": "/JsonEditorWebApp/static/js/2.849bd6d9.chunk.js.LICENSE.txt"
+    "static/css/main.9a57a90c.chunk.css.map": "/JsonEditorWebApp/static/css/main.9a57a90c.chunk.css.map",
+    "static/js/2.6d0bf6a0.chunk.js.LICENSE.txt": "/JsonEditorWebApp/static/js/2.6d0bf6a0.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.d4b64201.js",
-    "static/js/2.849bd6d9.chunk.js",
-    "static/css/main.f9d8452d.chunk.css",
-    "static/js/main.27755365.chunk.js"
+    "static/js/2.6d0bf6a0.chunk.js",
+    "static/css/main.9a57a90c.chunk.css",
+    "static/js/main.53233b3c.chunk.js"
   ]
 }
