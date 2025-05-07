@@ -1,8 +1,8 @@
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './components/Home';
-import SchemaValidator from './components/SchemaValidator';
-import Navigation from './components/ui/Navigation';
+import Home from './Home';
+import SchemaValidator from './SchemaValidator';
+import Navigation from './ui/Navigation';
 
 const App: React.FC = () => {
   return (
